@@ -295,9 +295,14 @@
   @media print {
     header .month-nav, #auth-section, .toolbar { display: none !important; }
     body { background: white; }
-    main { padding: 8px; max-width: 100%; }
-    .cal-cell { min-height: 70px; }
+    main { padding: 4px; max-width: 100%; }
+    .calendar { margin-bottom: 8px; }
+    .cal-cell { min-height: 50px; }
     .lists { page-break-inside: avoid; }
+    .event-pill { font-size: 0.55rem; padding: 1px 3px; }
+    .list-row { min-height: 24px; padding: 3px 6px; }
+    .list-header { padding: 5px 8px; font-size: 0.85rem; }
+    @page { margin: 0.4cm; size: letter portrait; }
   }
 </style>
 </head>
