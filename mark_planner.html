@@ -182,6 +182,25 @@ let calNotes = {};
 let calColors = {};
 let saveTimeout = null;
 
+// ── COLOR PICKER SETUP ───────────────────────────────────
+const popup = document.getElementById("color-popup");
+let activeDate = null;
+
+document.addEventListener("click", e => {
+  if (!popup.contains(e.target)) popup.style.display = "none";
+});
+
+popup.querySelectorAll(".color-swatch").forEach(swatch => {
+  swatch.addEventListener("click", e => {
+    if (!activeDate) return;
+    const color = swatch.dataset.color;
+    if (color) calColors[activeDate] = color;
+    else delete calColors[activeDate];
+    popup.style.display = "none";
+    saveAll().then(() => renderCalendar());
+  });
+});
+
 // ── FIREBASE ─────────────────────────────────────────────
 async function loadData() {
   setStatus("Loading...");
@@ -262,9 +281,6 @@ function renderCalendar() {
   });
 
   // Day number click → show color picker
-  const popup = document.getElementById("color-popup");
-  let activeDate = null;
-
   cal.querySelectorAll(".day-num").forEach(el => {
     el.addEventListener("click", e => {
       e.stopPropagation();
@@ -273,21 +289,6 @@ function renderCalendar() {
       popup.style.display = "flex";
       popup.style.top = (rect.bottom + window.scrollY + 4) + "px";
       popup.style.left = (rect.left + window.scrollX) + "px";
-    });
-  });
-
-  document.addEventListener("click", e => {
-    if (!popup.contains(e.target)) popup.style.display = "none";
-  });
-
-  popup.querySelectorAll(".color-swatch").forEach(swatch => {
-    swatch.addEventListener("click", e => {
-      if (!activeDate) return;
-      const color = swatch.dataset.color;
-      if (color) calColors[activeDate] = color;
-      else delete calColors[activeDate];
-      popup.style.display = "none";
-      saveAll().then(() => renderCalendar());
     });
   });
 }
