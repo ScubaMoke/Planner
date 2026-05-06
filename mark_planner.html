@@ -294,15 +294,19 @@
   /* ── PRINT ── */
   @media print {
     header .month-nav, #auth-section, .toolbar { display: none !important; }
-    body { background: white; }
-    main { padding: 4px; max-width: 100%; }
-    .calendar { margin-bottom: 8px; }
-    .cal-cell { min-height: 50px; }
+    body { background: white; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    main { padding: 2px; max-width: 100%; }
+    .calendar { margin-bottom: 6px; }
+    .cal-cell { min-height: 42px !important; max-height: 42px !important; overflow: hidden; }
+    .event-pill { font-size: 0.5rem !important; padding: 0px 2px !important; margin-bottom: 1px !important; line-height: 1.2; }
+    .more-events { display: none; }
     .lists { page-break-inside: avoid; }
-    .event-pill { font-size: 0.55rem; padding: 1px 3px; }
-    .list-row { min-height: 24px; padding: 3px 6px; }
-    .list-header { padding: 5px 8px; font-size: 0.85rem; }
-    @page { margin: 0.4cm; size: letter portrait; }
+    .list-row { min-height: 20px !important; padding: 2px 6px !important; }
+    .list-header { padding: 4px 8px !important; font-size: 0.8rem !important; }
+    .legend { margin-bottom: 6px; }
+    header { padding: 6px 16px; }
+    header h1 { font-size: 1.3rem; }
+    @page { margin: 0.3cm; size: letter portrait; }
   }
 </style>
 </head>
