@@ -436,8 +436,9 @@ async function fetchGCalEvents() {
       );
     });
 
-    // Fetch events from all calendars in parallel
-    const allEvents = await Promise.all(calendars.map(async cal => {
+    // Expand multi-day events across all days they span
+    const expandedEvents = [];
+    await Promise.all(calendars.map(async cal => {
       try {
         const res = await fetch(
           `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(cal.id)}/events`
@@ -445,17 +446,28 @@ async function fetchGCalEvents() {
           { headers: { Authorization: `Bearer ${accessToken}` } }
         );
         const data = await res.json();
-        return (data.items || []).map(ev => ({
-          date: (ev.start.dateTime || ev.start.date).substring(0, 10),
-          title: ev.summary || "(event)",
-          type: "gcal"
-        }));
-      } catch(e) {
-        return [];
-      }
+        (data.items || []).forEach(ev => {
+          const startDate = new Date((ev.start.dateTime || ev.start.date).substring(0, 10));
+          const endDateRaw = (ev.end.dateTime || ev.end.date).substring(0, 10);
+          const endDate = new Date(endDateRaw);
+          // For all-day events, end date is exclusive, so subtract 1 day
+          const adjustedEnd = ev.end.date ? new Date(endDate.getTime() - 86400000) : endDate;
+          
+          let current = new Date(startDate);
+          while (current <= adjustedEnd) {
+            const dateStr = current.toISOString().substring(0, 10);
+            expandedEvents.push({
+              date: dateStr,
+              title: ev.summary || "(event)",
+              type: "gcal"
+            });
+            current.setDate(current.getDate() + 1);
+          }
+        });
+      } catch(e) {}
     }));
 
-    gcalEvents = allEvents.flat();
+    gcalEvents = expandedEvents;
     renderCalendar();
   } catch(e) {
     console.error("GCal fetch error:", e);
