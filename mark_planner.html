@@ -422,7 +422,19 @@ async function fetchGCalEvents() {
       { headers: { Authorization: `Bearer ${accessToken}` } }
     );
     const calList = await calListRes.json();
-    const calendars = (calList.items || []).filter(c => c.selected !== false);
+    const allowedCalendars = [
+      "scuba moke",
+      "mark and shannon schedule",
+      "birthdays",
+      "holidays in united states"
+    ];
+    const calendars = (calList.items || []).filter(c => {
+      const summary = (c.summary || "").toLowerCase().trim();
+      const id = (c.id || "").toLowerCase().trim();
+      return allowedCalendars.some(name => 
+        summary === name.toLowerCase() || id === name.toLowerCase()
+      );
+    });
 
     // Fetch events from all calendars in parallel
     const allEvents = await Promise.all(calendars.map(async cal => {
