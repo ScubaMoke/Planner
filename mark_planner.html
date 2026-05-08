@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ardent Living Planner</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Source+Sans+3:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --dark:      #1a1a2e;
+    --handyman:  #2c6e49;
+    --aa:        #1d3557;
+    --personal:  #6b4226;
+    --light:     #f7f5f2;
+    --mid:       #d0ccc7;
+    --white:     #ffffff;
+    --accent:    #e8c547;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Source Sans 3', sans-serif; background: var(--light); color: var(--dark); min-height: 100vh; }
+
+  header { background: #f0ede8; color: var(--dark); padding: 12px 24px; display: flex; align-items: center; justify-content: space-between; -webkit-print-color-adjust: exact; print-color-adjust: exact; border-bottom: 2px solid var(--mid); }
+  header h1 { font-family: 'Bebas Neue', sans-serif; font-size: 1.8rem; letter-spacing: 2px; color: var(--dark); }
+  header .tagline { font-size: 0.78rem; color: var(--personal); letter-spacing: 1.5px; text-transform: uppercase; }
+  .month-nav { display: flex; align-items: center; gap: 12px; }
+  .month-nav button { background: none; border: 1px solid var(--mid); color: var(--dark); width: 28px; height: 28px; border-radius: 4px; cursor: pointer; font-size: 1rem; display: flex; align-items: center; justify-content: center; }
+  .month-nav button:hover { background: var(--mid); }
+  #month-label { font-family: 'Bebas Neue', sans-serif; font-size: 1.2rem; letter-spacing: 2px; min-width: 140px; text-align: center; color: var(--dark); }
+
+  main { padding: 14px 20px; max-width: 1100px; margin: 0 auto; }
+
+  .top-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; flex-wrap: wrap; gap: 8px; }
+  .legend { display: flex; gap: 16px; flex-wrap: wrap; }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; }
+  .legend-dot { width: 12px; height: 12px; border-radius: 2px; flex-shrink: 0; }
+  .toolbar { display: flex; gap: 8px; align-items: center; }
+  .btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 6px; border: none; cursor: pointer; font-family: 'Source Sans 3', sans-serif; font-size: 0.82rem; font-weight: 600; transition: opacity 0.15s; }
+  .btn:hover { opacity: 0.85; }
+  .btn-print { background: var(--dark); color: var(--white); }
+  .btn-save  { background: var(--handyman); color: var(--white); }
+  #save-status { font-size: 0.75rem; color: #888; }
+
+  .calendar { background: var(--white); border: 1.5px solid var(--mid); border-radius: 8px; overflow: hidden; margin-bottom: 14px; }
+  .cal-header { display: grid; grid-template-columns: repeat(7, 1fr); background: #f0ede8; border-bottom: 1.5px solid var(--mid); }
+  .cal-header div { text-align: center; padding: 7px 0; font-size: 0.9rem; font-family: 'Bebas Neue', sans-serif; font-weight: 400; color: var(--dark); letter-spacing: 2px; }
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); }
+  .cal-cell { min-height: 100px; border-right: 1px solid var(--mid); border-bottom: 1px solid var(--mid); padding: 4px 5px; background: var(--white); }
+  .cal-cell:nth-child(7n) { border-right: none; }
+  .cal-cell.weekend { background: #f0eeeb; }
+  .cal-cell.empty { background: #f7f5f2; }
+  .cal-cell.today { background: #fffbea; }
+  .day-num { font-size: 0.75rem; font-weight: 700; color: var(--dark); margin-bottom: 3px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; }
+  .day-num:hover { opacity: 0.7; }
+  .cal-cell.today .day-num { background: var(--accent); color: var(--dark); width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; cursor: pointer; }
+
+  .wx-info { font-size: 0.65rem; color: #555; margin-bottom: 2px; display: flex; align-items: center; gap: 2px; }
+
+  /* Color picker popup */
+  .color-popup { position: fixed; background: var(--white); border: 1.5px solid var(--mid); border-radius: 8px; padding: 8px; display: flex; gap: 6px; align-items: center; z-index: 1000; box-shadow: 0 4px 16px rgba(0,0,0,0.15); }
+  .color-swatch { width: 24px; height: 24px; border-radius: 4px; cursor: pointer; border: 2px solid transparent; transition: transform 0.1s; }
+  .color-swatch:hover { transform: scale(1.2); border-color: #333; }
+  .color-swatch.clear { background: white; border: 2px solid var(--mid); font-size: 0.7rem; display: flex; align-items: center; justify-content: center; color: #999; }
+
+  /* Day color backgrounds */
+  .cal-cell.color-handyman { background: rgba(44,110,73,0.15) !important; }
+  .cal-cell.color-aa       { background: rgba(29,53,87,0.15) !important; }
+  .cal-cell.color-personal { background: rgba(107,66,38,0.15) !important; }
+  .cal-cell.color-yellow   { background: rgba(232,197,71,0.2) !important; }
+  .cal-cell.color-red      { background: rgba(180,40,40,0.12) !important; }
+  .cal-note { width: 100%; border: none; background: transparent; font-family: 'Source Sans 3', sans-serif; font-size: 0.7rem; color: var(--dark); resize: none; outline: none; height: 72px; line-height: 1.4; padding: 0; }
+  .cal-note::placeholder { color: #ddd; }
+
+  .lists { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .list-card { border-radius: 8px; overflow: hidden; border: 1.5px solid var(--mid); }
+  .list-header { padding: 9px 12px; color: var(--white); font-family: 'Bebas Neue', sans-serif; font-size: 1rem; letter-spacing: 1.5px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .list-header.handyman { background: var(--handyman); }
+  .list-header.aa       { background: var(--aa); }
+  .list-header.personal { background: var(--personal); }
+  .list-body { background: var(--white); }
+  .list-row { display: flex; align-items: center; padding: 6px 10px; border-bottom: 1px solid #eeebe7; gap: 8px; min-height: 34px; }
+  .list-row:last-child { border-bottom: none; }
+  .list-row:nth-child(even) { background: #faf9f7; }
+  .row-num { font-size: 0.7rem; font-weight: 600; color: var(--mid); min-width: 16px; text-align: right; }
+  .row-input { flex: 1; border: none; background: transparent; font-family: 'Source Sans 3', sans-serif; font-size: 0.82rem; color: var(--dark); outline: none; padding: 0; }
+  .row-input::placeholder { color: #ccc; }
+  .row-input.done { text-decoration: line-through; color: #aaa; }
+  .row-check { width: 15px; height: 15px; border: 1.5px solid var(--mid); border-radius: 3px; flex-shrink: 0; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.65rem; color: var(--white); transition: background 0.15s; user-select: none; }
+  .row-check.checked.handyman { background: var(--handyman); border-color: var(--handyman); }
+  .row-check.checked.aa       { background: var(--aa); border-color: var(--aa); }
+  .row-check.checked.personal { background: var(--personal); border-color: var(--personal); }
+
+  footer { text-align: center; padding: 14px; font-size: 0.72rem; color: #aaa; letter-spacing: 1px; text-transform: uppercase; }
+
+  @media print {
+    header .month-nav, .toolbar, #save-status { display: none !important; }
+    body { background: white; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    main { padding: 2px; max-width: 100%; }
+    .cal-cell { min-height: 65px; }
+    .cal-note { height: 48px; font-size: 0.65rem; }
+    .list-row { min-height: 26px; padding: 3px 8px; }
+    .list-header { padding: 5px 8px; font-size: 0.85rem; }
+    @page { margin: 0.5cm; size: letter portrait; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>Ardent Living Planner</h1>
+    <div class="tagline">Burn with Purpose &nbsp;·&nbsp; Vita Ardens</div>
+  </div>
+  <div class="month-nav">
+    <button id="prev-month">&#8249;</button>
+    <div id="month-label"></div>
+    <button id="next-month">&#8250;</button>
+  </div>
+</header>
+
+<main>
+  <div class="top-bar">
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot" style="background:var(--handyman)"></div>Handyman Jobs</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--aa)"></div>Authority Accelerator</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--personal)"></div>Personal</div>
+    </div>
+    <div class="toolbar">
+      <span id="save-status">Loading...</span>
+      <button class="btn btn-save" id="save-btn">💾 Save</button>
+      <button class="btn btn-print" onclick="window.print()">🖨 Print</button>
+    </div>
+  </div>
+
+  <div class="calendar" id="calendar"></div>
+  <div class="lists" id="lists"></div>
+</main>
+
+<!-- Color picker popup -->
+<div class="color-popup" id="color-popup" style="display:none;">
+  <div class="color-swatch" style="background:#2c6e49" data-color="color-handyman" title="Handyman"></div>
+  <div class="color-swatch" style="background:#1d3557" data-color="color-aa" title="AA"></div>
+  <div class="color-swatch" style="background:#6b4226" data-color="color-personal" title="Personal"></div>
+  <div class="color-swatch" style="background:#e8c547" data-color="color-yellow" title="Note"></div>
+  <div class="color-swatch" style="background:#b42828" data-color="color-red" title="Important"></div>
+  <div class="color-swatch clear" data-color="" title="Clear">✕</div>
+</div>
+
+<footer>Ardent Living &nbsp;·&nbsp; On fire. On purpose. &nbsp;·&nbsp; Vita Ardens</footer>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+const app = initializeApp({
+  apiKey: "AIzaSyBmq5ypUBKHtBzgVRa2aoGnSY2Gigx5JNw",
+  authDomain: "marks-planner.firebaseapp.com",
+  databaseURL: "https://marks-planner-default-rtdb.firebaseio.com",
+  projectId: "marks-planner",
+  storageBucket: "marks-planner.firebasestorage.app",
+  messagingSenderId: "705657074680",
+  appId: "1:705657074680:web:09dfdaeb3a3701a6465c0d"
+});
+const db  = getDatabase(app);
+
+const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+const DAYS   = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+
+let currentDate  = new Date();
+let currentYear  = currentDate.getFullYear();
+let currentMonth = currentDate.getMonth();
+
+const listDefs = [
+  { key: "handyman", label: "Handyman Jobs Queue",        cls: "handyman", placeholder: "Job description..." },
+  { key: "aa",       label: "Authority Accelerator Tasks", cls: "aa",       placeholder: "Task or content item..." },
+  { key: "personal", label: "Personal To-Dos",             cls: "personal", placeholder: "Task..." },
+];
+
+let listData = {
+  handyman: Array(10).fill(0).map(() => ({ text: "", done: false })),
+  aa:       Array(10).fill(0).map(() => ({ text: "", done: false })),
+  personal: Array(10).fill(0).map(() => ({ text: "", done: false })),
+};
+let calNotes = {};
+let calColors = {};
+let saveTimeout = null;
+
+// ── COLOR PICKER SETUP ───────────────────────────────────
+const popup = document.getElementById("color-popup");
+let activeDate = null;
+
+document.addEventListener("click", e => {
+  if (!popup.contains(e.target)) popup.style.display = "none";
+});
+
+popup.querySelectorAll(".color-swatch").forEach(swatch => {
+  swatch.addEventListener("click", e => {
+    if (!activeDate) return;
+    const color = swatch.dataset.color;
+    if (color) calColors[activeDate] = color;
+    else delete calColors[activeDate];
+    popup.style.display = "none";
+    saveAll().then(() => renderCalendar());
+  });
+});
+
+// ── FIREBASE ─────────────────────────────────────────────
+async function loadData() {
+  setStatus("Loading...");
+  try {
+    const snap = await get(ref(db, "planner"));
+    if (snap.exists()) {
+      const d = snap.val();
+      if (d.lists) listDefs.forEach(def => { if (d.lists[def.key]) listData[def.key] = d.lists[def.key]; });
+      if (d.calNotes) calNotes = d.calNotes;
+      if (d.calColors) calColors = d.calColors;
+    }
+    setStatus("✓ Loaded");
+    setTimeout(() => setStatus(""), 1500);
+  } catch(e) {
+    setStatus("Load failed");
+    console.error(e);
+  }
+  renderCalendar();
+  renderLists();
+}
+
+async function saveAll() {
+  setStatus("Saving...");
+  try {
+    await set(ref(db, "planner"), { lists: listData, calNotes, calColors });
+    setStatus("✓ Saved");
+    setTimeout(() => setStatus(""), 2000);
+  } catch(e) {
+    setStatus("Save failed");
+    console.error(e);
+  }
+}
+
+function scheduleSave() {
+  clearTimeout(saveTimeout);
+  setStatus("Unsaved...");
+  saveTimeout = setTimeout(saveAll, 2000);
+}
+
+function setStatus(msg) {
+  document.getElementById("save-status").textContent = msg;
+}
+
+document.getElementById("save-btn").onclick = saveAll;
+
+// ── WEATHER ──────────────────────────────────────────────
+// OKC coordinates
+const OKC_LAT = 35.4676;
+const OKC_LON = -97.5164;
+let weatherData = {}; // key: "YYYY-MM-DD", value: { code, tempMax, tempMin }
+
+const weatherIcons = {
+  0: "☀️", 1: "🌤️", 2: "⛅", 3: "☁️",
+  45: "🌫️", 48: "🌫️",
+  51: "🌦️", 53: "🌦️", 55: "🌧️",
+  61: "🌧️", 63: "🌧️", 65: "🌧️",
+  71: "🌨️", 73: "🌨️", 75: "❄️",
+  80: "🌦️", 81: "🌧️", 82: "⛈️",
+  95: "⛈️", 96: "⛈️", 99: "⛈️"
+};
+
+async function fetchWeather() {
+  try {
+    const today = new Date().toISOString().substring(0, 10);
+    const end = new Date(Date.now() + 13 * 86400000).toISOString().substring(0, 10);
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${OKC_LAT}&longitude=${OKC_LON}&daily=weathercode,temperature_2m_max,temperature_2m_min&temperature_unit=fahrenheit&timezone=America%2FChicago&start_date=${today}&end_date=${end}`;
+    const res = await fetch(url);
+    const data = await res.json();
+    weatherData = {};
+    data.daily.time.forEach((date, i) => {
+      weatherData[date] = {
+        code: data.daily.weathercode[i],
+        tempMax: Math.round(data.daily.temperature_2m_max[i]),
+        tempMin: Math.round(data.daily.temperature_2m_min[i])
+      };
+    });
+    renderCalendar();
+  } catch(e) { console.error("Weather fetch error:", e); }
+}
+
+// ── CALENDAR ─────────────────────────────────────────────
+function renderCalendar() {
+  const cal = document.getElementById("calendar");
+  const firstDay = new Date(currentYear, currentMonth, 1).getDay();
+  const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+  const today = new Date();
+
+  let html = `<div class="cal-header">`;
+  DAYS.forEach(d => html += `<div>${d}</div>`);
+  html += `</div><div class="cal-grid">`;
+
+  for (let i = 0; i < firstDay; i++) html += `<div class="cal-cell empty"></div>`;
+
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dateStr = `${currentYear}-${String(currentMonth+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
+    const dow = new Date(currentYear, currentMonth, d).getDay();
+    const isWeekend = dow === 0 || dow === 6;
+    const isToday = d === today.getDate() && currentMonth === today.getMonth() && currentYear === today.getFullYear();
+    const colorCls = calColors[dateStr] ? ` ${calColors[dateStr]}` : "";
+    let cls = "cal-cell" + (isWeekend ? " weekend" : "") + (isToday ? " today" : "") + colorCls;
+    const note = calNotes[dateStr] || "";
+    const wx = weatherData[dateStr];
+    const wxHtml = wx ? `<div class="wx-info">${weatherIcons[wx.code] || "🌡️"} ${wx.tempMax}°/${wx.tempMin}°</div>` : "";
+    const numEl = isToday ? `<div class="day-num" data-date="${dateStr}"><span>${d}</span></div>` : `<div class="day-num" data-date="${dateStr}">${d}</div>`;
+    html += `<div class="${cls}">${numEl}${wxHtml}<textarea class="cal-note" data-date="${dateStr}" placeholder="Add notes...">${note}</textarea></div>`;
+  }
+  html += `</div>`;
+  cal.innerHTML = html;
+
+  cal.querySelectorAll(".cal-note").forEach(el => {
+    el.addEventListener("input", e => {
+      calNotes[e.target.dataset.date] = e.target.value;
+      scheduleSave();
+    });
+  });
+
+  // Day number click → show color picker
+  cal.querySelectorAll(".day-num").forEach(el => {
+    el.addEventListener("click", e => {
+      e.stopPropagation();
+      activeDate = el.dataset.date;
+      const rect = el.getBoundingClientRect();
+      popup.style.display = "flex";
+      popup.style.top = (rect.bottom + window.scrollY + 4) + "px";
+      popup.style.left = (rect.left + window.scrollX) + "px";
+    });
+  });
+}
+
+// ── LISTS ────────────────────────────────────────────────
+function renderLists() {
+  const container = document.getElementById("lists");
+  let html = "";
+  listDefs.forEach(def => {
+    html += `<div class="list-card"><div class="list-header ${def.cls}">${def.label}</div><div class="list-body">`;
+    listData[def.key].forEach((row, i) => {
+      const doneClass = row.done ? " done" : "";
+      const checkedClass = row.done ? ` checked ${def.cls}` : "";
+      const val = (row.text || "").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+      html += `<div class="list-row">
+        <div class="row-num">${i+1}</div>
+        <input class="row-input${doneClass}" data-list="${def.key}" data-idx="${i}" type="text" value="${val}" placeholder="${def.placeholder}">
+        <div class="row-check${checkedClass}" data-list="${def.key}" data-idx="${i}">${row.done ? "✓" : ""}</div>
+      </div>`;
+    });
+    html += `</div></div>`;
+  });
+  container.innerHTML = html;
+
+  container.querySelectorAll(".row-input").forEach(el => {
+    el.addEventListener("input", e => {
+      listData[e.target.dataset.list][e.target.dataset.idx].text = e.target.value;
+      scheduleSave();
+    });
+  });
+
+  container.querySelectorAll(".row-check").forEach(el => {
+    el.addEventListener("click", e => {
+      const { list, idx } = e.currentTarget.dataset;
+      listData[list][idx].done = !listData[list][idx].done;
+      saveAll().then(() => renderLists());
+    });
+  });
+}
+
+// ── MONTH NAV ────────────────────────────────────────────
+function updateMonthLabel() {
+  document.getElementById("month-label").textContent = `${MONTHS[currentMonth]} ${currentYear}`;
+}
+document.getElementById("prev-month").onclick = () => {
+  currentMonth--; if (currentMonth < 0) { currentMonth = 11; currentYear--; }
+  updateMonthLabel(); renderCalendar();
+};
+document.getElementById("next-month").onclick = () => {
+  currentMonth++; if (currentMonth > 11) { currentMonth = 0; currentYear++; }
+  updateMonthLabel(); renderCalendar();
+};
+
+updateMonthLabel();
+loadData();
+fetchWeather();
+</script>
+</body>
+</html>
